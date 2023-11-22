@@ -1,0 +1,31 @@
+---
+- name: Export AD Group Information
+  hosts: localhost
+  tasks:
+    - name: Import Active Directory module
+      win_shell: Import-Module ActiveDirectory
+      args:
+        executable: powershell.exe
+
+    - name: Query AD Group Information
+      win_shell: |
+        $groupName = "YourGroupName"
+        $group = Get-ADGroup -Filter { Name -eq $groupName } -Properties *
+        
+        $groupInfo = @()
+
+        $groupInfo += [PSCustomObject]@{
+            "GroupName"     = $group.Name
+            "OwnersName"    = $group.ManagedBy -replace '^CN=|,.*$'
+            "OULocation"    = ($group.DistinguishedName -split ',', 2)[1]
+            "Members"       = ($group.Members | ForEach-Object { $_.SamAccountName }) -join ","
+        }
+
+        $groupInfo | Export-Csv -Path "C:\GroupInfo.csv" -NoTypeInformation
+      args:
+        executable: powershell.exe
+
+    - name: Copy CSV file to local directory
+      win_copy:
+        src: "C:\GroupInfo.csv"
+        dest: "{{ playbook_dir }}/GroupInfo.csv"

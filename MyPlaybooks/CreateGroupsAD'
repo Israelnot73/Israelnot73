@@ -1,0 +1,17 @@
+---
+- name: Create AD Group
+  hosts: localhost
+  gather_facts: no
+
+  vars:
+    ad_group_name: "ExampleGroup"
+    ad_group_description: "An example Active Directory group"
+    ad_ou_path: "OU=Groups,DC=example,DC=com"  # Organizational Unit (OU) path where you want to create the group
+
+  tasks:
+    - name: Create AD Group
+      win_shell: |
+        Import-Module ActiveDirectory
+        New-ADGroup -Name "{{ ad_group_name }}" -Description "{{ ad_group_description }}" -Path "{{ ad_ou_path }}" -GroupScope Global
+      args:
+        executable: powershell
